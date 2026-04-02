@@ -78,6 +78,17 @@ export default function App() {
     let score: StrengthLevel = 0;
     const feedback: string[] = [];
 
+    // Check for USN patterns (e.g., 1DS22CS001, DS001)
+    const usnPattern = /(1DS\d{2}[A-Z]{2,3}\d{3}|DS\d{3})/i;
+    if (usnPattern.test(pwd)) {
+      return {
+        score: 0,
+        label: 'Very Weak',
+        color: 'bg-red-500',
+        feedback: ["Don't use your USN"]
+      };
+    }
+
     // Check for common weak passwords
     if (commonPasswords.includes(pwd.toLowerCase())) {
       return {
@@ -91,6 +102,12 @@ export default function App() {
     // Check for repeating characters (e.g., "aaaaa")
     if (/(.)\1{4,}/.test(pwd)) {
       feedback.push('Avoid repeating characters');
+      score = Math.max(0, score - 1) as StrengthLevel;
+    }
+
+    // Check for repeating patterns (e.g., "ababab", "121212", "ioioio")
+    if (/(.{2,})\1{2,}/.test(pwd.toLowerCase())) {
+      feedback.push('Avoid repeating patterns');
       score = Math.max(0, score - 1) as StrengthLevel;
     }
 
