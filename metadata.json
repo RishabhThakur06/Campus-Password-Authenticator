@@ -1,0 +1,5 @@
+{
+  "name": "Campus Password Analyzer",
+  "description": "A specialized password strength analyzer and generator for secure campus and university accounts.",
+  "requestFramePermissions": []
+}
