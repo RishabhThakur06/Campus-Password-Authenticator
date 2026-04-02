@@ -69,5 +69,5 @@ To create an optimized production build of the application:
 - **Build Tool**: Vite
 
 ## License
-
+5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
 This project is licensed under the Apache-2.0 License.
