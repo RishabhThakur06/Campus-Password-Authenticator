@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, ChangeEvent } from 'react';
 import { 
   ShieldCheck, 
   ShieldAlert, 
@@ -21,7 +21,9 @@ import {
   Clock,
   BookOpen,
   QrCode,
-  X
+  X,
+  FileText,
+  Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -41,6 +43,7 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [length, setLength] = useState(16);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [options, setOptions] = useState({
     uppercase: true,
     lowercase: true,
@@ -103,6 +106,28 @@ export default function App() {
     const passphrase = words.join('-') + '-' + num;
     setPassword(passphrase);
   }, []);
+
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        // Take the first line and trim it
+        const firstLine = content.split('\n')[0].trim();
+        if (firstLine) {
+          setPassword(firstLine);
+        }
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so the same file can be uploaded again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const getStrength = (pwd: string): StrengthInfo => {
     if (!pwd) return { score: 0, label: 'Empty', color: 'bg-gray-200', feedback: [] };
@@ -518,6 +543,29 @@ export default function App() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Import Section */}
+          <div className="flex justify-center">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".txt"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group"
+            >
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
+                <Upload size={18} />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-bold text-white">Import from Text File</p>
+                <p className="text-xs text-gray-500">Analyze an existing password securely</p>
+              </div>
+            </button>
           </div>
 
           {/* Tips Section */}

@@ -10,6 +10,7 @@ A specialized, privacy-focused password strength analyzer and generator designed
 - **Dynamic Security Visuals**: Animated lock icon that reinforces with chains for strong passwords and "cracks" for weak ones.
 - **Time-to-Crack Estimation**: Real-time brute-force calculation based on entropy and character sets.
 - **Memorable Passphrases**: Generates easy-to-remember, high-security word-based passwords using a campus-themed wordlist.
+- **File Import**: Securely upload and analyze existing passwords from `.txt` files.
 - **Secure QR Sharing**: Transfer passwords to mobile devices via on-screen QR codes for safe cross-device usage.
 - **Privacy-First**: No external API calls or AI processing; all logic is local.
 
