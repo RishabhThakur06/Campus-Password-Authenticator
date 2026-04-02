@@ -12,6 +12,7 @@ A specialized, privacy-focused password strength analyzer and generator designed
 - **Memorable Passphrases**: Generates easy-to-remember, high-security word-based passwords using a campus-themed wordlist.
 - **File Import**: Securely upload and analyze existing passwords from `.txt` files. The app reads the first line of the file, preserving internal spaces while trimming leading/trailing whitespace.
 - **Secure QR Sharing**: Transfer passwords to mobile devices via on-screen QR codes for safe cross-device usage.
+- **Light & Dark Mode**: Toggle between a high-contrast dark theme and a soft light beige/emerald green theme.
 - **Privacy-First**: No external API calls or AI processing; all logic is local.
 
 ## Prerequisites

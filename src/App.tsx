@@ -23,7 +23,9 @@ import {
   QrCode,
   X,
   FileText,
-  Upload
+  Upload,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -38,6 +40,7 @@ interface StrengthInfo {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -270,7 +273,11 @@ export default function App() {
 
   const LockVisual = ({ score }: { score: StrengthLevel }) => {
     return (
-      <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 mb-6 transition-all duration-500">
+      <div className={`relative inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-6 transition-all duration-500 border ${
+        theme === 'dark' 
+          ? 'bg-amber-500/10 border-amber-500/20' 
+          : 'bg-emerald-900/5 border-emerald-900/10'
+      }`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={score}
@@ -281,20 +288,20 @@ export default function App() {
           >
             {score === 0 && password.length > 0 ? (
               <div className="relative">
-                <Lock className="w-10 h-10 text-red-500 opacity-40" />
+                <Lock className={`w-10 h-10 opacity-40 ${theme === 'dark' ? 'text-red-500' : 'text-red-700'}`} />
                 <motion.div 
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
                   className="absolute inset-0 flex items-center justify-center"
                 >
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`${theme === 'dark' ? 'text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'text-red-700'}`}>
                     <path d="M7 7l10 10M17 7L7 17" />
                   </svg>
                 </motion.div>
               </div>
             ) : score === 4 ? (
               <div className="relative">
-                <Lock className="w-10 h-10 text-blue-400 drop-shadow-[0_0_12px_rgba(96,165,250,0.5)]" />
+                <Lock className={`w-10 h-10 ${theme === 'dark' ? 'text-blue-400 drop-shadow-[0_0_12px_rgba(96,165,250,0.5)]' : 'text-emerald-800'}`} />
                 {/* Chains */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.5 }}
@@ -302,36 +309,42 @@ export default function App() {
                   className="absolute -inset-2 pointer-events-none"
                 >
                   <div className="absolute top-0 left-0 -rotate-45">
-                    <LinkIcon className="w-5 h-5 text-blue-300/80" />
+                    <LinkIcon className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-300/80' : 'text-emerald-700/80'}`} />
                   </div>
                   <div className="absolute bottom-0 right-0 -rotate-45">
-                    <LinkIcon className="w-5 h-5 text-blue-300/80" />
+                    <LinkIcon className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-300/80' : 'text-emerald-700/80'}`} />
                   </div>
                   <div className="absolute top-0 right-0 rotate-45">
-                    <LinkIcon className="w-5 h-5 text-blue-300/80" />
+                    <LinkIcon className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-300/80' : 'text-emerald-700/80'}`} />
                   </div>
                   <div className="absolute bottom-0 left-0 rotate-45">
-                    <LinkIcon className="w-5 h-5 text-blue-300/80" />
+                    <LinkIcon className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-300/80' : 'text-emerald-700/80'}`} />
                   </div>
                 </motion.div>
                 {/* Reinforcement Ring */}
                 <motion.div 
                   animate={{ rotate: 360 }}
                   transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  className="absolute -inset-3 border-2 border-dashed border-blue-400/30 rounded-full"
+                  className={`absolute -inset-3 border-2 border-dashed rounded-full ${theme === 'dark' ? 'border-blue-400/30' : 'border-emerald-800/30'}`}
                 />
               </div>
             ) : score === 3 ? (
               <div className="relative">
-                <Lock className="w-10 h-10 text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.4)]" />
+                <Lock className={`w-10 h-10 ${theme === 'dark' ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.4)]' : 'text-emerald-600'}`} />
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="absolute -inset-1 border border-emerald-400/40 rounded-xl"
+                  className={`absolute -inset-1 border rounded-xl ${theme === 'dark' ? 'border-emerald-400/40' : 'border-emerald-600/40'}`}
                 />
               </div>
             ) : (
-              <Lock className={`w-10 h-10 ${score === 0 ? 'text-gray-600' : score === 1 ? 'text-orange-500' : 'text-yellow-500'}`} />
+              <Lock className={`w-10 h-10 ${
+                score === 0 
+                  ? (theme === 'dark' ? 'text-gray-600' : 'text-emerald-900/20') 
+                  : score === 1 
+                    ? (theme === 'dark' ? 'text-orange-500' : 'text-orange-700') 
+                    : (theme === 'dark' ? 'text-yellow-500' : 'text-emerald-600')
+              }`} />
             )}
           </motion.div>
         </AnimatePresence>
@@ -351,14 +364,38 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-amber-500/30">
+    <div className={`min-h-screen transition-colors duration-500 font-sans selection:bg-amber-500/30 ${
+      theme === 'dark' ? 'bg-[#0a0a0a] text-white' : 'bg-[#fdfbf7] text-emerald-950'
+    }`}>
       {/* Background Glow */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-500/10 blur-[120px] rounded-full" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-amber-600/10 blur-[120px] rounded-full" />
+        {theme === 'dark' ? (
+          <>
+            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-500/10 blur-[120px] rounded-full" />
+            <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-amber-600/10 blur-[120px] rounded-full" />
+          </>
+        ) : (
+          <>
+            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-emerald-500/5 blur-[120px] rounded-full" />
+            <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-emerald-600/5 blur-[120px] rounded-full" />
+          </>
+        )}
       </div>
 
       <main className="relative z-10 max-w-2xl mx-auto px-6 py-20">
+        <div className="absolute top-8 right-6">
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className={`p-3 rounded-2xl border transition-all ${
+              theme === 'dark' 
+                ? 'bg-white/5 border-white/10 text-amber-500 hover:bg-white/10' 
+                : 'bg-emerald-900/5 border-emerald-900/10 text-emerald-800 hover:bg-emerald-900/10'
+            }`}
+          >
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -368,45 +405,61 @@ export default function App() {
           <header className="text-center space-y-4">
             <LockVisual score={strength.score} />
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl uppercase italic">
-              Campus <span className="text-amber-500">Security</span>
+              Campus <span className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>Security</span>
             </h1>
-            <p className="text-gray-400 text-lg max-w-md mx-auto">
+            <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'} text-lg max-w-md mx-auto`}>
               Protect your university credentials with our specialized strength analyzer and generator.
             </p>
           </header>
 
           {/* Main Card */}
-          <div className="bg-[#161616] border border-white/5 rounded-3xl p-8 shadow-2xl backdrop-blur-sm">
+          <div className={`border rounded-3xl p-8 shadow-2xl backdrop-blur-sm transition-all ${
+            theme === 'dark' 
+              ? 'bg-[#161616] border-white/5' 
+              : 'bg-white border-emerald-900/10 shadow-emerald-900/5'
+          }`}>
             <div className="space-y-8">
               {/* Password Input Area */}
               <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-400 ml-1">Campus Account Password</label>
+                <label className={`text-sm font-medium ml-1 ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/50'}`}>Campus Account Password</label>
                 <div className="relative group">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your campus password..."
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-6 py-5 text-xl font-mono focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all placeholder:text-gray-700"
+                    className={`w-full border rounded-2xl px-6 py-5 text-xl font-mono focus:outline-none focus:ring-2 transition-all placeholder:text-gray-700 ${
+                      theme === 'dark'
+                        ? 'bg-black/40 border-white/10 focus:ring-amber-500/50'
+                        : 'bg-emerald-50/50 border-emerald-900/10 focus:ring-emerald-800/30 text-emerald-950'
+                    }`}
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                     <button
                       onClick={() => setShowPassword(!showPassword)}
-                      className="p-2.5 text-gray-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                      className={`p-2.5 rounded-xl transition-colors ${
+                        theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
+                      }`}
                       title={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                     <button
                       onClick={copyToClipboard}
-                      className={`p-2.5 rounded-xl transition-all ${copied ? 'bg-amber-500/20 text-amber-500' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                      className={`p-2.5 rounded-xl transition-all ${
+                        copied 
+                          ? (theme === 'dark' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-800/10 text-emerald-800') 
+                          : (theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5')
+                      }`}
                       title="Copy to clipboard"
                     >
                       {copied ? <Check size={20} /> : <Copy size={20} />}
                     </button>
                     <button
                       onClick={() => setShowQr(true)}
-                      className="p-2.5 text-gray-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                      className={`p-2.5 rounded-xl transition-colors ${
+                        theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
+                      }`}
                       title="Share via QR Code"
                     >
                       <QrCode size={20} />
@@ -419,42 +472,48 @@ export default function App() {
               <div className="space-y-4">
                 <div className="flex justify-between items-end px-1">
                   <div className="space-y-1">
-                    <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Campus Security Score</span>
+                    <span className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>Campus Security Score</span>
                     <div className="flex items-center gap-2">
-                      <span className={`text-lg font-bold ${strength.color.replace('bg-', 'text-')}`}>
+                      <span className={`text-lg font-bold ${
+                        theme === 'dark' 
+                          ? strength.color.replace('bg-', 'text-') 
+                          : strength.color.replace('bg-', 'text-').replace('amber-500', 'emerald-700').replace('yellow-500', 'emerald-600').replace('red-500', 'red-700')
+                      }`}>
                         {strength.label}
                       </span>
                       {strength.score >= 3 ? (
-                        <ShieldCheck className="w-5 h-5 text-amber-500" />
+                        <ShieldCheck className={`w-5 h-5 ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`} />
                       ) : strength.score >= 1 ? (
-                        <Shield className="w-5 h-5 text-yellow-500" />
+                        <Shield className={`w-5 h-5 ${theme === 'dark' ? 'text-yellow-500' : 'text-emerald-600'}`} />
                       ) : (
                         <ShieldAlert className="w-5 h-5 text-red-500" />
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500 font-mono">
+                  <span className={`text-xs font-mono ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
                     {password.length} characters
                   </span>
                 </div>
                 
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden flex gap-1 p-0.5">
+                <div className={`h-2 w-full rounded-full overflow-hidden flex gap-1 p-0.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-emerald-900/5'}`}>
                   {[0, 1, 2, 3].map((i) => (
                     <div 
                       key={i}
                       className={`h-full flex-1 rounded-full transition-all duration-500 ${
-                        i <= strength.score - 1 ? strength.color : 'bg-white/5'
+                        i <= strength.score - 1 
+                          ? (theme === 'dark' ? strength.color : strength.color.replace('amber-500', 'emerald-800').replace('yellow-500', 'emerald-600').replace('red-500', 'red-700'))
+                          : (theme === 'dark' ? 'bg-white/5' : 'bg-emerald-900/5')
                       }`}
                     />
                   ))}
                 </div>
 
                 <div className="flex items-center justify-between px-1 pt-1">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Clock size={12} className="text-amber-500/70" />
+                  <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
+                    <Clock size={12} className={theme === 'dark' ? 'text-amber-500/70' : 'text-emerald-600'} />
                     <span>Estimated time to crack:</span>
                   </div>
-                  <span className="text-xs font-bold text-amber-500 font-mono">
+                  <span className={`text-xs font-bold font-mono ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`}>
                     {getTimeToCrack(password)}
                   </span>
                 </div>
@@ -468,7 +527,11 @@ export default function App() {
                       className="flex flex-wrap gap-2 pt-2"
                     >
                       {strength.feedback.map((f, i) => (
-                        <span key={i} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-red-500/10 text-red-400 rounded-md border border-red-500/20">
+                        <span key={i} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${
+                          theme === 'dark' 
+                            ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                            : 'bg-red-50 border-red-200 text-red-700'
+                        }`}>
                           {f}
                         </span>
                       ))}
@@ -478,12 +541,14 @@ export default function App() {
               </div>
 
               {/* Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-white/5">
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t ${theme === 'dark' ? 'border-white/5' : 'border-emerald-900/10'}`}>
                 <div className="space-y-6">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center px-1">
-                      <span className="text-sm font-medium text-gray-400">Length</span>
-                      <span className="text-sm font-mono text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">{length}</span>
+                      <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'}`}>Length</span>
+                      <span className={`text-sm font-mono px-2 py-0.5 rounded ${
+                        theme === 'dark' ? 'text-amber-500 bg-amber-500/10' : 'text-emerald-800 bg-emerald-900/5'
+                      }`}>{length}</span>
                     </div>
                     <input
                       type="range"
@@ -491,7 +556,9 @@ export default function App() {
                       max="64"
                       value={length}
                       onChange={(e) => setLength(parseInt(e.target.value))}
-                      className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-amber-500 ${
+                        theme === 'dark' ? 'bg-white/10' : 'bg-emerald-900/10'
+                      }`}
                     />
                   </div>
 
@@ -502,12 +569,12 @@ export default function App() {
                         onClick={() => setOptions(prev => ({ ...prev, [key]: !value }))}
                         className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
                           value 
-                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                            : 'bg-white/5 border-white/5 text-gray-500 hover:border-white/10'
+                            ? (theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-emerald-900/10 border-emerald-900/30 text-emerald-800') 
+                            : (theme === 'dark' ? 'bg-white/5 border-white/5 text-gray-500 hover:border-white/10' : 'bg-emerald-900/5 border-emerald-900/5 text-emerald-900/40 hover:border-emerald-900/20')
                         }`}
                       >
                         <span className="text-xs font-bold uppercase tracking-wider">{key}</span>
-                        {value ? <Check size={14} /> : <div className="w-3.5 h-3.5 rounded-full border border-gray-700" />}
+                        {value ? <Check size={14} /> : <div className={`w-3.5 h-3.5 rounded-full border ${theme === 'dark' ? 'border-gray-700' : 'border-emerald-900/20'}`} />}
                       </button>
                     ))}
                   </div>
@@ -516,7 +583,11 @@ export default function App() {
                 <div className="flex flex-col justify-end gap-4">
                   <button
                     onClick={generatePassword}
-                    className="group relative w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-5 rounded-2xl transition-all overflow-hidden shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] flex items-center justify-center"
+                    className={`group relative w-full font-bold py-5 rounded-2xl transition-all overflow-hidden flex items-center justify-center ${
+                      theme === 'dark'
+                        ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
+                        : 'bg-emerald-800 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(6,78,59,0.2)] hover:shadow-[0_0_30px_rgba(6,78,59,0.3)]'
+                    }`}
                   >
                     <div className="relative z-10 flex items-center gap-3 px-4">
                       <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500 shrink-0" />
@@ -527,7 +598,11 @@ export default function App() {
 
                   <button
                     onClick={generatePassphrase}
-                    className="group relative w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-5 rounded-2xl transition-all overflow-hidden shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] flex items-center justify-center"
+                    className={`group relative w-full font-bold py-5 rounded-2xl transition-all overflow-hidden flex items-center justify-center ${
+                      theme === 'dark'
+                        ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
+                        : 'bg-emerald-800 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(6,78,59,0.2)] hover:shadow-[0_0_30px_rgba(6,78,59,0.3)]'
+                    }`}
                   >
                     <div className="relative z-10 flex items-center gap-3 px-4">
                       <BookOpen size={20} className="group-hover:scale-110 transition-transform duration-300 shrink-0" />
@@ -536,8 +611,8 @@ export default function App() {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   </button>
                   
-                  <div className="flex items-center gap-2 text-xs text-gray-500 px-2">
-                    <Zap size={14} className="text-yellow-500" />
+                  <div className={`flex items-center gap-2 text-xs px-2 ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
+                    <Zap size={14} className={theme === 'dark' ? 'text-yellow-500' : 'text-emerald-600'} />
                     <span>Meets university security policy requirements.</span>
                   </div>
                 </div>
@@ -556,14 +631,20 @@ export default function App() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group"
+              className={`flex items-center gap-3 px-8 py-4 rounded-2xl border transition-all group ${
+                theme === 'dark'
+                  ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                  : 'bg-emerald-900/5 border-emerald-900/10 hover:bg-emerald-900/10 hover:border-emerald-900/20'
+              }`}
             >
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
+              <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${
+                theme === 'dark' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-800/10 text-emerald-800'
+              }`}>
                 <Upload size={18} />
               </div>
               <div className="text-left">
-                <p className="text-sm font-bold text-white">Import from Text File</p>
-                <p className="text-xs text-gray-500">Analyze an existing password securely</p>
+                <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Import from Text File</p>
+                <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>Analyze an existing password securely</p>
               </div>
             </button>
           </div>
@@ -575,10 +656,12 @@ export default function App() {
               { icon: <Lock size={18} />, title: "2FA", desc: "Always enable Duo or university 2FA." },
               { icon: <Info size={18} />, title: "Phishing", desc: "Never share your password with 'IT Support'." }
             ].map((tip, i) => (
-              <div key={i} className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                <div className="text-amber-500">{tip.icon}</div>
-                <h3 className="font-bold text-sm">{tip.title}</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">{tip.desc}</p>
+              <div key={i} className={`p-4 rounded-2xl border space-y-2 ${
+                theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-emerald-900/5 border-emerald-900/5'
+              }`}>
+                <div className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>{tip.icon}</div>
+                <h3 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>{tip.title}</h3>
+                <p className={`text-xs leading-relaxed ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/50'}`}>{tip.desc}</p>
               </div>
             ))}
           </section>
@@ -600,43 +683,42 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-[#161616] border border-white/10 rounded-3xl p-8 shadow-2xl text-center space-y-6"
+              className={`relative w-full max-w-sm border rounded-3xl p-8 shadow-2xl text-center space-y-6 ${
+                theme === 'dark' ? 'bg-[#161616] border-white/10' : 'bg-white border-emerald-900/10'
+              }`}
             >
               <button
                 onClick={() => setShowQr(false)}
-                className="absolute top-4 right-4 p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+                className={`absolute top-4 right-4 p-2 rounded-xl transition-colors ${
+                  theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
+                }`}
               >
                 <X size={20} />
               </button>
               
               <div className="space-y-2">
-                <h3 className="text-xl font-bold uppercase tracking-tight italic">
-                  Scan to <span className="text-amber-500">Copy</span>
+                <h3 className={`text-xl font-bold uppercase tracking-tight italic ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>
+                  Scan to <span className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>Copy</span>
                 </h3>
-                <p className="text-sm text-gray-400">
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'}`}>
                   Scan this QR code with your mobile device to securely transfer the password.
                 </p>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl inline-block shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+              <div className={`p-6 rounded-2xl inline-block shadow-2xl ${
+                theme === 'dark' ? 'bg-white shadow-white/5' : 'bg-white shadow-emerald-900/10'
+              }`}>
                 <QRCodeSVG 
                   value={password} 
                   size={200}
                   level="H"
                   includeMargin={false}
-                  imageSettings={{
-                    src: "https://ais-dev-xthfhpg3fsfmbknmwoyhtu-754809295729.asia-southeast1.run.app/favicon.ico",
-                    x: undefined,
-                    y: undefined,
-                    height: 24,
-                    width: 24,
-                    excavate: true,
-                  }}
+                  fgColor={theme === 'dark' ? '#000000' : '#064e3b'}
                 />
               </div>
 
               <div className="pt-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-600' : 'text-emerald-900/30'}`}>
                   Security Warning: Never share this QR code in public spaces.
                 </p>
               </div>
@@ -646,7 +728,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="py-12 text-center text-gray-600 text-sm">
+      <footer className={`py-12 text-center text-sm ${theme === 'dark' ? 'text-gray-600' : 'text-emerald-900/30'}`}>
         <p>Copyright 2026 Campus Security Lab - University IT Services</p>
       </footer>
     </div>
