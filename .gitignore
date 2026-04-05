@@ -7,3 +7,5 @@ coverage/
 .env*
 !.env.example
 DETAILED_GUIDE.md
+UI_UX_GUIDE.md
+DEPLOYMENT_BUGFIX_GUIDE.md

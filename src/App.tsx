@@ -186,6 +186,33 @@ export default function App() {
       };
     }
 
+    // Check for leet speak
+    const leetMap: { [key: string]: string } = {
+      '4': 'a', '@': 'a',
+      '3': 'e',
+      '1': 'i', '!': 'i', '|': 'i',
+      '0': 'o',
+      '5': 's', '$': 's',
+      '7': 't', '+': 't',
+      '9': 'g',
+      '8': 'b',
+      '2': 'z',
+      '6': 'g'
+    };
+    
+    const deLeeted = pwd.toLowerCase().split('').map(char => leetMap[char] || char).join('');
+    if (deLeeted !== pwd.toLowerCase() && commonPasswords.includes(deLeeted)) {
+      return {
+        score: 0,
+        label: 'Very Weak',
+        color: 'bg-red-500',
+        feedback: ['Weak leet speak password']
+      };
+    } else if (deLeeted !== pwd.toLowerCase()) {
+      // If it's leet speak but not a common password, just give feedback
+      feedback.push('Leet speak is easily cracked');
+    }
+
     // Check for repeating characters (e.g., "aaaaa")
     if (/(.)\1{4,}/.test(pwd)) {
       feedback.push('Avoid repeating characters');
