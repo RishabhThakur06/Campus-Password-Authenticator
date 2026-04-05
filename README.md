@@ -6,7 +6,7 @@ A specialized, privacy-focused password strength analyzer and generator designed
 
 - **Real-Time Analysis**: Instant feedback on password complexity and entropy.
 - **Heuristic Filtering**: Detects common weak patterns, dictionary words, and keyboard sequences.
-- **USN & Hash Detection**: Automatically identifies and rejects University Seat Numbers (USN) and common cryptographic hashes (MD5, SHA256, etc.).
+- **USN & Hash Detection**: Automatically identifies and rejects University Seat Numbers (USN), common cryptographic hashes (MD5, SHA256, etc.), and **leet speak** substitutions (e.g., `p4$$w0rd`).
 - **Dynamic Security Visuals**: Animated lock icon that reinforces with chains for strong passwords and "cracks" for weak ones.
 - **Time-to-Crack Estimation**: Real-time brute-force calculation based on entropy and character sets.
 - **Memorable Passphrases**: Generates easy-to-remember, high-security word-based passwords using a campus-themed wordlist.
