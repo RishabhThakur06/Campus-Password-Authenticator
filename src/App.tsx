@@ -59,6 +59,10 @@ export default function App() {
     numbers: true,
     symbols: true,
   });
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [generatedOptions, setGeneratedOptions] = useState<string[]>([]);
+  const [generationMode, setGenerationMode] = useState<'Maximum' | 'Balanced' | 'Easy'>('Balanced');
+  const [isGeneratorPanelOpen, setIsGeneratorPanelOpen] = useState(false);
 
   const generatePassword = useCallback(() => {
     const charset = {
@@ -68,20 +72,61 @@ export default function App() {
       symbols: '!@#$%^&*()_+~`|}{[]:;?><,./-=',
     };
 
-    let characters = '';
-    if (options.uppercase) characters += charset.uppercase;
-    if (options.lowercase) characters += charset.lowercase;
-    if (options.numbers) characters += charset.numbers;
-    if (options.symbols) characters += charset.symbols;
+    const newOptions: string[] = [];
 
-    if (characters === '') return;
+    const defaultWordlist = ['campus', 'secure', 'shield', 'access', 'system', 'portal', 'server', 'network', 'digital', 'safety', 'cipher', 'locked', 'matrix', 'vector', 'binary', 'signal', 'global', 'future', 'modern', 'expert', 'master', 'active', 'direct', 'source', 'bridge', 'tunnel', 'cloud', 'stream', 'buffer', 'packet', 'socket', 'kernel', 'script', 'syntax', 'object', 'module', 'string', 'number', 'boolean', 'array', 'method', 'return', 'export', 'import', 'render', 'effect', 'state', 'props', 'shadow', 'hunter', 'dragon', 'falcon', 'phoenix', 'nebula', 'galaxy', 'cosmos', 'planet', 'orbit', 'rocket', 'launch', 'engine', 'torque', 'motion', 'energy', 'static', 'dynamic', 'stable', 'strong', 'robust', 'secure', 'stable', 'steady', 'vibrant', 'bright', 'clear', 'sharp', 'smart', 'clever', 'quick', 'swift', 'silent', 'calm', 'peace', 'quiet', 'brave', 'bold', 'noble', 'grand', 'royal'];
+    const getWord = () => {
+      if (customWordlist.length > 0 && Math.random() > 0.3) {
+        return customWordlist[Math.floor(Math.random() * customWordlist.length)];
+      }
+      return defaultWordlist[Math.floor(Math.random() * defaultWordlist.length)];
+    };
 
-    let generated = '';
-    for (let i = 0; i < length; i++) {
-      generated += characters.charAt(Math.floor(Math.random() * characters.length));
+    for (let j = 0; j < 3; j++) {
+      if (generationMode === 'Maximum') {
+        const chars = charset.uppercase + charset.lowercase + charset.numbers + charset.symbols;
+        let generated = '';
+        const len = Math.floor(Math.random() * 5) + 16; // 16 to 20
+        for (let i = 0; i < len; i++) {
+          generated += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        newOptions.push(generated);
+      } else if (generationMode === 'Easy') {
+        const w1 = getWord();
+        let w2 = getWord();
+        while (w1 === w2) w2 = getWord();
+        const num = Math.floor(Math.random() * 99) + 1; // 1-99
+        newOptions.push(`${w1}-${w2}${num}`);
+      } else {
+        // Balanced
+        const w = getWord();
+        const wordCap = w.charAt(0).toUpperCase() + w.slice(1);
+        let chars = '';
+        if (options.uppercase) chars += charset.uppercase;
+        if (options.lowercase) chars += charset.lowercase;
+        if (options.numbers) chars += charset.numbers;
+        if (options.symbols) chars += charset.symbols;
+        if (!chars) chars = charset.lowercase + charset.numbers;
+
+        let randomPart = '';
+        const targetLen = Math.max(12, length);
+        const rem = Math.max(4, targetLen - w.length);
+        for(let i=0; i<rem; i++) {
+          randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        newOptions.push(`${wordCap}${randomPart}`);
+      }
     }
-    setPassword(generated);
-  }, [length, options]);
+    
+    setGeneratedOptions(newOptions);
+    setIsGeneratorPanelOpen(true);
+  }, [length, options, generationMode, customWordlist]);
+
+  useEffect(() => {
+    if (isGeneratorPanelOpen) {
+      generatePassword();
+    }
+  }, [generationMode]);
 
   const generatePassphrase = useCallback(() => {
     const defaultWordlist = [
@@ -136,6 +181,54 @@ export default function App() {
     setPassword(passphrase);
   }, [customWordlist]);
 
+  const improvePassword = useCallback(() => {
+    if (!password) return;
+    
+    let improved = password;
+    
+    // Leetspeak Dictionary
+    const leetMap: Record<string, string> = {
+      'a': '@', 'A': '@',
+      'o': '0', 'O': '0',
+      's': '$', 'S': '$',
+      'i': '1', 'I': '1',
+      'e': '3', 'E': '3',
+    };
+
+    let replacements = 0;
+    improved = improved.split('').map(char => {
+      if (leetMap[char] && replacements < 2 && Math.random() > 0.4) {
+        replacements++;
+        return leetMap[char];
+      }
+      return char;
+    }).join('');
+
+    // Ensure Capitalization
+    if (improved.length > 0) {
+      improved = improved.charAt(0).toUpperCase() + improved.slice(1);
+    }
+
+    // Add Special Character if missing
+    if (!/[^A-Za-z0-9]/.test(improved)) {
+      const symbols = ['!', '@', '#', '$', '%', '*', '?'];
+      improved += symbols[Math.floor(Math.random() * symbols.length)];
+    }
+
+    // Add Number if missing
+    if (!/[0-9]/.test(improved)) {
+      improved += Math.floor(Math.random() * 100);
+    }
+
+    // Meaningful Suffix
+    const suffixes = ['Secure', 'Safe', 'Strong', 'Key', 'Lock'];
+    if (improved.length < 12) {
+       improved += '_' + suffixes[Math.floor(Math.random() * suffixes.length)];
+    }
+
+    setPassword(improved);
+  }, [password]);
+
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -168,17 +261,17 @@ export default function App() {
     }
   };
 
+  const commonPasswords = [
+    'password', '123456', '12345678', 'qwerty', 'iloveyou', 'admin', 'login', 
+    'campus', 'student', 'university', 'welcome', 'monkey', 'dragon', 
+    'football', 'baseball', 'sunshine', 'princess', 'charlie', 'ginger', 
+    'shadow', 'hunter', 'master', 'killer', 'hacker', 'secret', 'access', 
+    'system', 'root', 'user', 'test', 'demo', 'sample', 'example', 
+    'default', 'change', 'update', 'reset', 'forgot', 'help', 'support'
+  ];
+
   const getStrength = (pwd: string): StrengthInfo => {
     if (!pwd) return { score: 0, label: 'Empty', color: 'bg-gray-200', feedback: [] };
-
-    const commonPasswords = [
-      'password', '123456', '12345678', 'qwerty', 'iloveyou', 'admin', 'login', 
-      'campus', 'student', 'university', 'welcome', 'monkey', 'dragon', 
-      'football', 'baseball', 'sunshine', 'princess', 'charlie', 'ginger', 
-      'shadow', 'hunter', 'master', 'killer', 'hacker', 'secret', 'access', 
-      'system', 'root', 'user', 'test', 'demo', 'sample', 'example', 
-      'default', 'change', 'update', 'reset', 'forgot', 'help', 'support'
-    ];
 
     let score: StrengthLevel = 0;
     const feedback: string[] = [];
@@ -283,6 +376,81 @@ export default function App() {
   };
 
   const strength = getStrength(password);
+
+  const getSimulatedAttacks = (pwd: string) => {
+    if (!pwd) return null;
+
+    const lowerPwd = pwd.toLowerCase();
+    
+    // Dictionary check
+    const isCommon = commonPasswords.includes(lowerPwd) || 
+      lowerPwd.includes('123') || 
+      lowerPwd.includes('qwerty') || 
+      lowerPwd.includes('password') ||
+      /(.)\1{4,}/.test(pwd);
+
+    // Readable sequences (5+ letters continuous)
+    const hasReadable = /[a-zA-Z]{5,}/.test(pwd);
+
+    const getThemeColor = (darkColor: string, lightColor: string) => theme === 'dark' ? darkColor : lightColor;
+
+    let dictTime = '';
+    let dictColor = '';
+    if (isCommon) {
+      dictTime = '🔴 Vulnerable';
+      dictColor = getThemeColor('text-red-500', 'text-red-700');
+    } else if (hasReadable) {
+      dictTime = '🟠 Partially Vulnerable';
+      dictColor = getThemeColor('text-orange-500', 'text-orange-700');
+    } else {
+      dictTime = '🟢 Resistant';
+      dictColor = getThemeColor('text-emerald-500', 'text-emerald-700');
+    }
+
+    const dictionary = { time: dictTime, color: dictColor };
+
+    // Hybrid attack
+    let hybridTime = '';
+    let hybridColor = '';
+    if (pwd.length < 8) { 
+      hybridTime = '🔴 Vulnerable'; 
+      hybridColor = getThemeColor('text-red-500', 'text-red-700'); 
+    } else if (pwd.length <= 11) { 
+      hybridTime = '🟠 Moderate'; 
+      hybridColor = getThemeColor('text-orange-500', 'text-orange-700'); 
+    } else { 
+      hybridTime = '🟢 Strong'; 
+      hybridColor = getThemeColor('text-emerald-500', 'text-emerald-700'); 
+    }
+
+    // Brute force
+    let charsetSize = 0;
+    if (/[a-z]/.test(pwd)) charsetSize += 26;
+    if (/[A-Z]/.test(pwd)) charsetSize += 26;
+    if (/[0-9]/.test(pwd)) charsetSize += 10;
+    if (/[^A-Za-z0-9]/.test(pwd)) charsetSize += 33;
+    if (charsetSize === 0) charsetSize = 1;
+
+    const combinations = BigInt(charsetSize) ** BigInt(pwd.length);
+    const guessesPerSecond = BigInt(1_000_000_000); // 1 billion/sec
+    const seconds = combinations / guessesPerSecond;
+
+    let bruteTime = '';
+    let bruteColor = '';
+    let bruteIcon = (seconds < 3600n) ? '🔴' : (seconds < 31536000n) ? '🟠' : '🟢';
+
+    if (seconds < 1n) { bruteTime = 'Instant'; bruteColor = getThemeColor('text-red-500', 'text-red-700'); }
+    else if (seconds < 60n) { bruteTime = `${seconds} seconds`; bruteColor = getThemeColor('text-red-500', 'text-red-700'); }
+    else if (seconds < 3600n) { bruteTime = `${seconds / 60n} minutes`; bruteColor = getThemeColor('text-orange-500', 'text-orange-700'); }
+    else if (seconds < 86400n) { bruteTime = `${seconds / 3600n} hours`; bruteColor = getThemeColor('text-orange-500', 'text-orange-700'); }
+    else if (seconds < 31536000n) { bruteTime = `${seconds / 86400n} days`; bruteColor = getThemeColor('text-emerald-500', 'text-emerald-700'); }
+    else if (seconds < 3153600000n) { bruteTime = `${seconds / 31536000n} years`; bruteColor = getThemeColor('text-emerald-500', 'text-emerald-700'); }
+    else { bruteTime = 'Centuries'; bruteColor = getThemeColor('text-emerald-500', 'text-emerald-700'); }
+
+    bruteTime = `${bruteIcon} ${bruteTime}`;
+
+    return { dictionary, hybrid: { time: hybridTime, color: hybridColor }, brute: { time: bruteTime, color: bruteColor } };
+  };
 
   const getTimeToCrack = (pwd: string) => {
     if (!pwd) return '0 seconds';
@@ -420,19 +588,36 @@ export default function App() {
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {theme === 'dark' ? (
           <>
-            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-500/10 blur-[120px] rounded-full" />
-            <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-amber-600/10 blur-[120px] rounded-full" />
+            <motion.div animate={{ y: [-20, 20, -20], x: [-10, 10, -10], scale: [1, 1.1, 1] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-500/10 blur-[120px] rounded-full" />
+            <motion.div animate={{ y: [20, -20, 20], x: [10, -10, 10], scale: [1, 1.2, 1] }} transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }} className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-amber-600/10 blur-[120px] rounded-full" />
           </>
         ) : (
           <>
-            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-emerald-500/5 blur-[120px] rounded-full" />
-            <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-emerald-600/5 blur-[120px] rounded-full" />
+            <motion.div animate={{ y: [-15, 15, -15], x: [-5, 5, -5], scale: [1, 1.05, 1] }} transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }} className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full" />
+            <motion.div animate={{ y: [15, -15, 15], x: [5, -5, 5], scale: [1, 1.1, 1] }} transition={{ duration: 17, repeat: Infinity, ease: 'easeInOut' }} className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-emerald-600/10 blur-[120px] rounded-full" />
           </>
         )}
       </div>
 
-      <main className="relative z-10 max-w-2xl mx-auto px-6 py-20">
-        <div className="absolute top-8 right-6">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 py-12 lg:py-16">
+        <div className="flex justify-between items-start mb-8 lg:mb-12">
+          <div>
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <ShieldCheck className={theme === 'dark' ? 'text-amber-500 h-8 w-8' : 'text-emerald-800 h-8 w-8'} />
+              <h1 className="text-3xl font-extrabold tracking-tight uppercase italic drop-shadow-sm">
+                Campus<span className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>Guard</span>
+              </h1>
+              <span className={`px-2 py-1 text-[10px] font-bold rounded-md border ${
+                theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-emerald-800/10 border-emerald-800/20 text-emerald-800'
+              }`}>
+                🔒 100% Offline Secure
+              </span>
+            </div>
+            <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'} text-sm`}>
+              Privacy-first password intelligence system
+            </p>
+          </div>
+          
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className={`p-3 rounded-2xl border transition-all ${
@@ -445,85 +630,21 @@ export default function App() {
           </button>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-12"
-        >
-          {/* Header */}
-          <header className="text-center space-y-4">
-            <LockVisual score={strength.score} />
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl uppercase italic">
-              Campus <span className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>Security</span>
-            </h1>
-            <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'} text-lg max-w-md mx-auto`}>
-              Protect your university credentials with our specialized strength analyzer and generator.
-            </p>
-          </header>
-
-          {/* Main Card */}
-          <div className={`border rounded-3xl p-8 shadow-2xl backdrop-blur-sm transition-all ${
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          
+          {/* Left Column: Analyzer (7 cols) */}
+          <div className={`col-span-1 lg:col-span-7 flex flex-col border rounded-[2rem] p-6 lg:p-10 shadow-2xl backdrop-blur-2xl transition-all relative overflow-hidden ${
             theme === 'dark' 
-              ? 'bg-[#161616] border-white/5' 
-              : 'bg-white border-emerald-900/10 shadow-emerald-900/5'
+              ? 'bg-[#161616]/60 border-white/10 shadow-black/50 ring-1 ring-inset ring-white/[0.05]' 
+              : 'bg-white/80 border-white/60 shadow-emerald-900/5 ring-1 ring-inset ring-white'
           }`}>
-            <div className="space-y-8">
-              {/* Password Input Area */}
-              <div className="space-y-3">
-                <label className={`text-sm font-medium ml-1 ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/50'}`}>Campus Account Password</label>
-                <div className="relative group">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your campus password..."
-                    className={`w-full border rounded-2xl px-6 py-5 text-xl font-mono focus:outline-none focus:ring-2 transition-all placeholder:text-gray-700 ${
-                      theme === 'dark'
-                        ? 'bg-black/40 border-white/10 focus:ring-amber-500/50'
-                        : 'bg-emerald-50/50 border-emerald-900/10 focus:ring-emerald-800/30 text-emerald-950'
-                    }`}
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    <button
-                      onClick={() => setShowPassword(!showPassword)}
-                      className={`p-2.5 rounded-xl transition-colors ${
-                        theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
-                      }`}
-                      title={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                    <button
-                      onClick={copyToClipboard}
-                      className={`p-2.5 rounded-xl transition-all ${
-                        copied 
-                          ? (theme === 'dark' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-800/10 text-emerald-800') 
-                          : (theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5')
-                      }`}
-                      title="Copy to clipboard"
-                    >
-                      {copied ? <Check size={20} /> : <Copy size={20} />}
-                    </button>
-                    <button
-                      onClick={() => setShowQr(true)}
-                      className={`p-2.5 rounded-xl transition-colors ${
-                        theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
-                      }`}
-                      title="Share via QR Code"
-                    >
-                      <QrCode size={20} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Strength Indicator */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-end px-1">
-                  <div className="space-y-1">
-                    <span className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>Campus Security Score</span>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-lg font-bold ${
+            <div className="flex-1 flex flex-col relative z-10">
+               {/* Lock Visual and Label */}
+               <div className="flex justify-between items-start mb-6">
+                 <LockVisual score={strength.score} />
+                 <div className="text-right">
+                   <div className="flex items-center justify-end gap-2 mb-1">
+                     <span className={`text-2xl font-bold ${
                         theme === 'dark' 
                           ? strength.color.replace('bg-', 'text-') 
                           : strength.color.replace('bg-', 'text-').replace('amber-500', 'emerald-700').replace('yellow-500', 'emerald-600').replace('red-500', 'red-700')
@@ -531,20 +652,22 @@ export default function App() {
                         {strength.label}
                       </span>
                       {strength.score >= 3 ? (
-                        <ShieldCheck className={`w-5 h-5 ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`} />
+                        <ShieldCheck className={`w-6 h-6 ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`} />
                       ) : strength.score >= 1 ? (
-                        <Shield className={`w-5 h-5 ${theme === 'dark' ? 'text-yellow-500' : 'text-emerald-600'}`} />
+                        <Shield className={`w-6 h-6 ${theme === 'dark' ? 'text-yellow-500' : 'text-emerald-600'}`} />
                       ) : (
-                        <ShieldAlert className="w-5 h-5 text-red-500" />
+                        <ShieldAlert className="w-6 h-6 text-red-500" />
                       )}
-                    </div>
+                   </div>
+                   <div className={`flex items-center justify-end gap-2 text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
+                    <Clock size={12} className={theme === 'dark' ? 'text-amber-500/70' : 'text-emerald-600'} />
+                    <span>Time to crack: <span className={`font-bold font-mono ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`}>{getTimeToCrack(password)}</span></span>
                   </div>
-                  <span className={`text-xs font-mono ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
-                    {password.length} characters
-                  </span>
-                </div>
-                
-                <div className={`h-2 w-full rounded-full overflow-hidden flex gap-1 p-0.5 ${theme === 'dark' ? 'bg-white/5' : 'bg-emerald-900/5'}`}>
+                 </div>
+               </div>
+
+               {/* Strength Bar */}
+               <div className={`h-3 w-full rounded-full overflow-hidden flex gap-1 p-0.5 mb-6 ${theme === 'dark' ? 'bg-white/5' : 'bg-emerald-900/5'}`}>
                   {[0, 1, 2, 3].map((i) => (
                     <motion.div 
                       key={i}
@@ -555,538 +678,399 @@ export default function App() {
                         i <= strength.score - 1 
                           ? (theme === 'dark' ? strength.color : strength.color.replace('amber-500', 'emerald-800').replace('yellow-500', 'emerald-600').replace('red-500', 'red-700'))
                           : (theme === 'dark' ? 'bg-white/5' : 'bg-emerald-900/5')
-                      }`}
+                      } ${strength.score === 4 && i <= 3 ? 'shadow-[0_0_10px_rgba(52,211,153,0.5)]' : ''}`}
                     />
                   ))}
-                </div>
+               </div>
 
-                <div className="flex items-center justify-between px-1 pt-1">
-                  <div className={`flex items-center gap-2 text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
-                    <Clock size={12} className={theme === 'dark' ? 'text-amber-500/70' : 'text-emerald-600'} />
-                    <span>Estimated time to crack:</span>
-                  </div>
-                  <span className={`text-xs font-bold font-mono ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`}>
-                    {getTimeToCrack(password)}
-                  </span>
-                </div>
-
-                <AnimatePresence>
-                  {strength.feedback.length > 0 && password.length > 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="flex flex-wrap gap-2 pt-2"
-                    >
-                      {strength.feedback.map((f, i) => (
-                        <span key={i} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${
-                          theme === 'dark' 
-                            ? 'bg-red-500/10 text-red-400 border-red-500/20' 
-                            : 'bg-red-50 border-red-200 text-red-700'
-                        }`}>
-                          {f}
-                        </span>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Controls */}
-              <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t ${theme === 'dark' ? 'border-white/5' : 'border-emerald-900/10'}`}>
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center px-1">
-                      <span className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'}`}>Length</span>
-                      <span className={`text-sm font-mono px-2 py-0.5 rounded ${
-                        theme === 'dark' ? 'text-amber-500 bg-amber-500/10' : 'text-emerald-800 bg-emerald-900/5'
-                      }`}>{length}</span>
-                    </div>
+               {/* Password Input Area */}
+               <div className="flex flex-col gap-2 mb-6">
+                  <label className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/50'}`}>Target Credential</label>
+                  <div className="relative group flex items-center">
                     <input
-                      type="range"
-                      min="8"
-                      max="64"
-                      value={length}
-                      onChange={(e) => setLength(parseInt(e.target.value))}
-                      className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-amber-500 ${
-                        theme === 'dark' ? 'bg-white/10' : 'bg-emerald-900/10'
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter or generate campus password..."
+                      className={`w-full border rounded-xl pl-5 pr-24 py-3 text-lg font-mono focus:outline-none focus:ring-2 transition-all duration-300 placeholder:text-gray-500/70 shadow-inner ${
+                        theme === 'dark'
+                          ? 'bg-black/40 border-white/10 hover:border-white/20 focus:ring-amber-500/30 focus:border-amber-500/50 text-white'
+                          : 'bg-emerald-50/50 border-emerald-900/10 hover:border-emerald-900/20 focus:ring-emerald-800/20 focus:border-emerald-800/40 text-emerald-950'
                       }`}
                     />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {Object.entries(options).map(([key, value]) => (
-                      <button
-                        key={key}
-                        onClick={() => setOptions(prev => ({ ...prev, [key]: !value }))}
-                        className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
-                          value 
-                            ? (theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-emerald-900/10 border-emerald-900/30 text-emerald-800') 
-                            : (theme === 'dark' ? 'bg-white/5 border-white/5 text-gray-500 hover:border-white/10' : 'bg-emerald-900/5 border-emerald-900/5 text-emerald-900/40 hover:border-emerald-900/20')
-                        }`}
-                      >
-                        <span className="text-xs font-bold uppercase tracking-wider">{key}</span>
-                        {value ? <Check size={14} /> : <div className={`w-3.5 h-3.5 rounded-full border ${theme === 'dark' ? 'border-gray-700' : 'border-emerald-900/20'}`} />}
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 h-full py-2">
+                      <button onClick={() => setShowPassword(!showPassword)} className={`flex items-center justify-center h-full aspect-square rounded-lg transition-colors duration-300 ${theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-emerald-900/50 hover:text-emerald-900 hover:bg-emerald-900/10'}`} title={showPassword ? "Hide password" : "Show password"}>
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col justify-end gap-4">
-                  <button
-                    onClick={generatePassword}
-                    className={`group relative w-full font-bold py-5 rounded-2xl transition-all overflow-hidden flex items-center justify-center ${
-                      theme === 'dark'
-                        ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
-                        : 'bg-emerald-800 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(6,78,59,0.2)] hover:shadow-[0_0_30px_rgba(6,78,59,0.3)]'
-                    }`}
-                  >
-                    <div className="relative z-10 flex items-center gap-3 px-4">
-                      <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500 shrink-0" />
-                      <span className="leading-tight">Generate Secure Key</span>
+                      <button onClick={copyToClipboard} className={`flex items-center justify-center h-full aspect-square rounded-lg transition-all duration-300 ${copied ? (theme === 'dark' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-800/10 text-emerald-800') : (theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-emerald-900/50 hover:text-emerald-900 hover:bg-emerald-900/10')}`} title="Copy to clipboard">
+                        {copied ? <Check size={18} /> : <Copy size={18} />}
+                      </button>
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  </button>
-
-                  <button
-                    onClick={generatePassphrase}
-                    className={`group relative w-full font-bold py-5 rounded-2xl transition-all overflow-hidden flex items-center justify-center ${
-                      theme === 'dark'
-                        ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)]'
-                        : 'bg-emerald-800 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(6,78,59,0.2)] hover:shadow-[0_0_30px_rgba(6,78,59,0.3)]'
-                    }`}
-                  >
-                    <div className="relative z-10 flex items-center gap-3 px-4">
-                      <BookOpen size={20} className="group-hover:scale-110 transition-transform duration-300 shrink-0" />
-                      <span className="leading-tight text-left">Generate Memorable Passphrase</span>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  </button>
-                  
-                  <div className={`flex items-center gap-2 text-xs px-2 ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
-                    <Zap size={14} className={theme === 'dark' ? 'text-yellow-500' : 'text-emerald-600'} />
-                    <span>Meets university security policy requirements.</span>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Import Section */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <div className="flex-1">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept=".txt"
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all group ${
-                  theme === 'dark'
-                    ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                    : 'bg-emerald-900/5 border-emerald-900/10 hover:bg-emerald-900/10 hover:border-emerald-900/20'
-                }`}
-              >
-                <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${
-                  theme === 'dark' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-800/10 text-emerald-800'
-                }`}>
-                  <Upload size={18} />
-                </div>
-                <div className="text-left">
-                  <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Import Password</p>
-                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>Analyze existing key</p>
-                </div>
-              </button>
-            </div>
-
-            <div className="flex-1">
-              <button
-                onClick={() => {
-                  setWordlistText(customWordlist.join('\n'));
-                  setShowWordlistModal(true);
-                }}
-                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl border transition-all group ${
-                  theme === 'dark'
-                    ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                    : 'bg-emerald-900/5 border-emerald-900/10 hover:bg-emerald-900/10 hover:border-emerald-900/20'
-                }`}
-              >
-                <div className={`p-2 rounded-lg group-hover:scale-110 transition-transform ${
-                  theme === 'dark' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-800/10 text-emerald-800'
-                }`}>
-                  <FileText size={18} />
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-2">
-                    <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Custom Wordlist</p>
-                    {customWordlist.length > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  {/* Subtle Improve Button */}
+                  <AnimatePresence>
+                    {password.length > 0 && strength.score < 3 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex justify-end overflow-hidden"
+                      >
+                        <button
+                          onClick={improvePassword}
+                          title="Automatically strengthen your password"
+                          className={`flex items-center gap-1.5 px-3 py-1 text-[11px] sm:text-xs font-bold rounded-md transition-all duration-200 ${
+                            theme === 'dark'
+                              ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400'
+                              : 'bg-emerald-900/10 text-emerald-800 hover:bg-emerald-900/20 hover:text-emerald-900'
+                          }`}
+                        >
+                          <span>🔧</span> Improve
+                        </button>
+                      </motion.div>
                     )}
-                  </div>
-                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
-                    {customWordlist.length > 0 ? `${customWordlist.length} words active` : 'Enter custom words'}
-                  </p>
-                </div>
-              </button>
-            </div>
-          </div>
+                  </AnimatePresence>
+               </div>
 
-          {/* Tips Section */}
-          <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { 
-                icon: <Shield size={18} />, 
-                title: "No PII", 
-                desc: "Avoid using your Student ID or birthday.",
-                detail: "Personally Identifiable Information like your USN, birth date, or phone number are easily guessable by attackers. Use random words instead.",
-                fullContent: (
-                  <div className="space-y-4">
-                    <p>Personally Identifiable Information (PII) includes any data that can be used to distinguish or trace an individual's identity. In a university context, this often includes your <strong>University Student Number (USN)</strong>, birth date, and campus email.</p>
-                    <h4 className="font-bold">Why it matters:</h4>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li>Attackers often use publicly available PII to guess passwords or answer security questions.</li>
-                      <li>Using your USN as part of your password makes it significantly easier for brute-force tools to crack your account.</li>
-                      <li>Randomly generated passphrases provide much higher entropy than PII-based passwords.</li>
-                    </ul>
-                    <div className={`p-4 rounded-xl italic border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-emerald-900/5 border-emerald-900/10'}`}>
-                      "A password like 'JohnDoe1995' can be cracked in seconds. A passphrase like 'campus-Secure-shield-access-159' would take centuries."
-                    </div>
-                  </div>
-                )
-              },
-              { 
-                icon: <Lock size={18} />, 
-                title: "2FA", 
-                desc: "Always enable Duo or university 2FA.",
-                detail: "Two-Factor Authentication adds a second layer of security. Even if your password is stolen, your account remains protected.",
-                fullContent: (
-                  <div className="space-y-4">
-                    <p>2FA is a security process in which users provide two different authentication factors to verify themselves. This adds a critical layer of protection beyond just a password.</p>
-                    <h4 className="font-bold">How it works at our University:</h4>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li><strong>Something you know:</strong> Your campus password.</li>
-                      <li><strong>Something you have:</strong> A push notification on your mobile device (via Duo Mobile) or a physical security key.</li>
-                    </ul>
-                    <p>Even if an attacker successfully steals your password through phishing, they cannot access your account without the second factor. <strong>Never approve a 2FA request that you didn't initiate.</strong></p>
-                  </div>
-                )
-              },
-              { 
-                icon: <Info size={18} />, 
-                title: "Phishing", 
-                desc: "Never share your password with 'IT Support'.",
-                detail: "University IT will never ask for your password via email or phone. Always check the URL before entering credentials.",
-                fullContent: (
-                  <div className="space-y-4">
-                    <p>Phishing is a type of social engineering where an attacker sends a fraudulent message designed to trick a person into revealing sensitive information.</p>
-                    <h4 className="font-bold">Red Flags to Watch For:</h4>
-                    <ul className="list-disc pl-5 space-y-2">
-                      <li><strong>Urgent Language:</strong> "Your account will be deleted in 24 hours if you don't verify now."</li>
-                      <li><strong>Suspicious Senders:</strong> Emails from 'IT Support' using a non-university domain (e.g., @gmail.com).</li>
-                      <li><strong>Mismatched URLs:</strong> Hover over links to see the actual destination before clicking.</li>
-                    </ul>
-                    <p>University IT Services will <strong>never</strong> ask for your password via email, phone, or text message. If you are unsure, contact the IT Help Desk directly through official channels.</p>
-                  </div>
-                )
-              }
-            ].map((tip, i) => (
-              <div 
-                key={i} 
-                className={`relative p-4 rounded-2xl border space-y-2 cursor-help transition-all group ${
-                  theme === 'dark' ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-emerald-900/5 border-emerald-900/5 hover:bg-emerald-900/10'
-                }`}
-                onMouseEnter={() => setHoveredTip(i)}
-                onMouseLeave={() => setHoveredTip(null)}
-                onClick={() => {
-                  setSelectedGuideSection(i);
-                  setShowGuideModal(true);
-                }}
-              >
-                <div className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>{tip.icon}</div>
-                <h3 className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>{tip.title}</h3>
-                <p className={`text-xs leading-relaxed ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/50'}`}>{tip.desc}</p>
-                
+               {/* Feedback */}
+                <div className="mt-auto">
+                  <AnimatePresence>
+                    {strength.feedback.length > 0 && password.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex flex-wrap gap-2"
+                      >
+                        {strength.feedback.map((f, i) => (
+                          <span key={i} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border ${
+                            theme === 'dark' 
+                              ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                              : 'bg-red-50 border-red-200 text-red-700'
+                          }`}>
+                            {f}
+                          </span>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Attack Simulation */}
                 <AnimatePresence>
-                  {hoveredTip === i && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className={`absolute bottom-full left-0 right-0 mb-4 z-50 p-4 rounded-2xl border shadow-2xl backdrop-blur-md ${
+                  {password.length > 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className={`mt-4 p-3 rounded-lg border ${
                         theme === 'dark' 
-                          ? 'bg-[#1a1a1a]/95 border-white/10 text-gray-300' 
-                          : 'bg-white/95 border-emerald-900/10 text-emerald-900/70'
+                          ? 'bg-white/5 border-white/10' 
+                          : 'bg-emerald-900/5 border-emerald-900/10'
                       }`}
                     >
-                      <p className="text-xs leading-relaxed mb-3">
-                        {tip.detail}
-                      </p>
-                      <div 
-                        className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:underline ${
-                          theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'
-                        }`}
-                      >
-                        Read Full Guide <BookOpen size={10} />
+                      <h3 className={`text-sm font-bold flex items-center gap-2 mb-3 ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>
+                        <span>⚡</span> Attack Simulation
+                      </h3>
+                      <div className="space-y-2 text-sm z-20">
+                        {(() => {
+                          const attacks = getSimulatedAttacks(password);
+                          if (!attacks) return null;
+                          return (
+                            <>
+                              <div className="flex justify-between items-center">
+                                <span className={theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/70'}>Dictionary Attack</span>
+                                <span className={`font-bold ${attacks.dictionary.color}`}>{attacks.dictionary.time}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className={theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/70'}>Hybrid Attack</span>
+                                <span className={`font-bold ${attacks.hybrid.color}`}>{attacks.hybrid.time}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className={theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/70'}>Brute Force</span>
+                                <span className={`font-bold ${attacks.brute.color}`}>{attacks.brute.time}</span>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
-                      {/* Arrow */}
-                      <div className={`absolute top-full left-1/2 -translate-x-1/2 -mt-px border-8 border-transparent ${
-                        theme === 'dark' ? 'border-t-[#1a1a1a]/95' : 'border-t-white/95'
-                      }`} />
+                      <p className={`mt-3 text-[10px] uppercase tracking-widest font-bold ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'}`}>
+                        Based on est. 1 billion guesses/sec speed
+                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+
+
+            </div>
+          </div>
+
+          {/* Right Column: Generator (5 cols) */}
+          <div className={`col-span-1 lg:col-span-5 flex flex-col border rounded-[2rem] p-6 lg:p-10 shadow-2xl backdrop-blur-2xl transition-all relative overflow-hidden ${
+            theme === 'dark' 
+              ? 'bg-[#161616]/60 border-white/10 shadow-black/50 ring-1 ring-inset ring-white/[0.05]' 
+              : 'bg-white/80 border-white/60 shadow-emerald-900/5 ring-1 ring-inset ring-white'
+          }`}>
+            <h2 className={`text-lg font-bold uppercase tracking-tight italic mb-8 flex items-center gap-2 ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>
+              <Zap size={20} className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-600'} />
+              Generator Engine
+            </h2>
+            
+            <div className="space-y-6 flex-1 flex flex-col relative z-10">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center px-1">
+                  <span className={`text-sm font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/60'}`}>Length</span>
+                  <span className={`text-sm font-mono px-3 py-1 rounded-md ${
+                    theme === 'dark' ? 'text-amber-500 bg-amber-500/10 font-bold border border-amber-500/20' : 'text-emerald-800 bg-emerald-900/5 font-bold border border-emerald-900/10'
+                  }`}>{length}</span>
+                </div>
+                <input type="range" min="8" max="64" value={length} onChange={(e) => setLength(parseInt(e.target.value))} className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-amber-500 ${theme === 'dark' ? 'bg-white/10' : 'bg-emerald-900/10'}`} />
               </div>
-            ))}
-          </section>
-        </motion.div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {Object.entries(options).map(([key, value]) => (
+                  <button key={key} onClick={() => setOptions(prev => ({ ...prev, [key]: !value }))} className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${value ? (theme === 'dark' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-emerald-900/10 border-emerald-900/30 text-emerald-800') : (theme === 'dark' ? 'bg-white/5 border-white/5 text-gray-500 hover:border-white/10' : 'bg-emerald-900/5 border-emerald-900/5 text-emerald-900/40 hover:border-emerald-900/20')}`}>
+                    <span className="text-xs font-bold uppercase tracking-wider">{key}</span>
+                    {value ? <Check size={14} /> : <div className={`w-3.5 h-3.5 rounded-full border ${theme === 'dark' ? 'border-gray-700' : 'border-emerald-900/20'}`} />}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-auto space-y-4 pt-4">
+                <button onClick={generatePassword} className={`group relative w-full font-bold py-5 rounded-2xl transition-all overflow-hidden flex items-center justify-center ${theme === 'dark' ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)]' : 'bg-emerald-800 hover:bg-emerald-700 text-white shadow-[0_0_20px_rgba(6,78,59,0.2)]'}`}>
+                  <div className="relative z-10 flex items-center gap-2">
+                    <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500 shrink-0" />
+                    <span>Generate Secure Password</span>
+                  </div>
+                </button>
+
+                <div className="pt-2 text-center space-y-2 relative">
+                  {/* Status Preview */}
+                  <div className={`text-[10px] uppercase tracking-widest font-bold px-2 truncate ${
+                    theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/40'
+                  }`}>
+                    {customWordlist.length > 0 
+                      ? `Using: ${customWordlist.slice(0, 3).join(', ')}${customWordlist.length > 3 ? ', ...' : ''}` 
+                      : 'No custom words added (using default list)'}
+                  </div>
+
+                  <button onClick={generatePassphrase} className={`group relative w-full font-bold py-5 rounded-2xl transition-all border flex items-center justify-center ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-emerald-900/5 border-emerald-900/10 hover:bg-emerald-900/10 text-emerald-950'}`}>
+                    <div className="relative z-10 flex items-center gap-2">
+                      <BookOpen size={20} className="group-hover:scale-110 transition-transform duration-300 shrink-0" />
+                      <span>Smart Passphrase</span>
+                    </div>
+                  </button>
+
+                  {/* Helper Text */}
+                  <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'}`}>
+                    Generate passphrase using your custom words
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Collapsible Advanced Section */}
+        <div className="mt-8">
+          <button 
+            onClick={() => setShowAdvancedTools(!showAdvancedTools)}
+            className={`flex items-center justify-between w-full lg:w-auto lg:min-w-[300px] mx-auto px-8 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest border transition-all shadow-sm ${
+              theme === 'dark' ? 'bg-[#161616]/80 border-white/10 text-amber-500 hover:text-amber-400 hover:border-white/30 hover:bg-white/5' : 'bg-white border-emerald-900/10 text-emerald-800 hover:text-emerald-900 hover:border-emerald-900/30 shadow-emerald-900/5'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Shield size={16} />
+              <span>Advanced Security Tools</span>
+            </div>
+            <motion.div animate={{ rotate: showAdvancedTools ? 180 : 0 }} transition={{ duration: 0.3 }}>
+              <Zap size={14} />
+            </motion.div>
+          </button>
+
+          <AnimatePresence>
+            {showAdvancedTools && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                className="overflow-hidden"
+              >
+                <div className={`border rounded-[2rem] p-6 sm:p-8 shadow-2xl backdrop-blur-2xl ${
+                  theme === 'dark' ? 'bg-[#161616]/60 border-white/10' : 'bg-white/80 border-white/60 shadow-emerald-900/5 ring-1 ring-inset ring-white'
+                }`}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Import */}
+                    <div className="space-y-4">
+                      <h3 className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/60'}`}>Import Tool</h3>
+                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".txt" className="hidden" />
+                      <button onClick={() => fileInputRef.current?.click()} className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border transition-all group ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-emerald-900/5 border-emerald-900/10 hover:bg-emerald-900/10'}`}>
+                        <div className="flex items-center gap-3">
+                          <Upload size={18} className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'} />
+                          <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Analyze File</p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Dictionary */}
+                    <div className="space-y-4">
+                      <h3 className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/60'}`}>Dictionary</h3>
+                      <button onClick={() => { setWordlistText(customWordlist.join('\n')); setShowWordlistModal(true); }} className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border transition-all group ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-emerald-900/5 border-emerald-900/10 hover:bg-emerald-900/10'}`}>
+                        <div className="flex items-center gap-3">
+                          <FileText size={18} className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'} />
+                          <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Custom Words</p>
+                        </div>
+                        <span className="text-xs font-bold font-mono bg-amber-500/20 text-amber-500 px-2 py-1 rounded-md">{customWordlist.length}</span>
+                      </button>
+                    </div>
+
+                    {/* QR Code */}
+                    <div className="space-y-4">
+                      <h3 className={`text-xs font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/60'}`}>Export</h3>
+                      <button onClick={() => setShowQr(true)} disabled={!password} className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border transition-all group ${theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10 disabled:opacity-30' : 'bg-emerald-900/5 border-emerald-900/10 hover:bg-emerald-900/10 disabled:opacity-40'}`}>
+                        <div className="flex items-center gap-3">
+                          <QrCode size={18} className={theme === 'dark' ? 'text-blue-500' : 'text-blue-800'} />
+                          <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>QR Transfer</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Move Tips Here */}
+                  <div className={`mt-8 pt-8 border-t ${theme === 'dark' ? 'border-white/10' : 'border-emerald-900/10'}`}>
+                    <h3 className={`text-xs font-bold uppercase tracking-widest mb-4 ${theme === 'dark' ? 'text-gray-500' : 'text-emerald-900/60'}`}>Security Guide</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {[ 
+                        { icon: <Shield size={16} />, title: "No PII", desc: "Never use your Student ID or birthday.", detail: "Personally Identifiable Information like your USN, birth date, or phone number are easily guessable by attackers. Use random words instead." },
+                        { icon: <Lock size={16} />, title: "2FA", desc: "Always enable Duo or university 2FA.", detail: "Two-Factor Authentication adds a second layer of security. Even if your password is stolen, your account remains protected." },
+                        { icon: <Info size={16} />, title: "Phishing", desc: "Never share your password with 'IT Support'.", detail: "University IT will never ask for your password via email or phone. Always check the URL before entering credentials." }
+                      ].map((tip, i) => (
+                        <div key={i} className={`p-4 rounded-2xl border space-y-2 ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-white/50 border-emerald-900/10'}`}>
+                           <div className={`flex items-center gap-2 mb-2 ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`}>{tip.icon} <span className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>{tip.title}</span></div>
+                           <p className={`text-xs leading-relaxed ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/70'}`}>{tip.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
 
+      {/* Modals Below (Unchanged structural wrap, just kept here) */}
       {/* Wordlist Modal */}
       <AnimatePresence>
         {showWordlistModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowWordlistModal(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-lg border rounded-3xl p-8 shadow-2xl space-y-6 ${
-                theme === 'dark' ? 'bg-[#161616] border-white/10' : 'bg-white border-emerald-900/10'
-              }`}
-            >
-              <button
-                onClick={() => setShowWordlistModal(false)}
-                className={`absolute top-4 right-4 p-2 rounded-xl transition-colors ${
-                  theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
-                }`}
-              >
-                <X size={20} />
-              </button>
-
-              <div className="space-y-2">
-                <h3 className={`text-xl font-bold uppercase tracking-tight italic ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>
-                  Custom <span className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>Wordlist</span>
-                </h3>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'}`}>
-                  Enter words separated by spaces or new lines. These will be used for passphrase generation.
-                  {wordlistText.trim() && (
-                    <span className={`block mt-1 font-bold ${theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}`}>
-                      {wordlistText.split(/\s+/).filter(w => w.length > 0).length} words detected
-                    </span>
-                  )}
-                </p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowWordlistModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className={`relative w-full max-w-lg border rounded-[2rem] p-8 shadow-2xl space-y-6 ${theme === 'dark' ? 'bg-[#161616] border-white/10' : 'bg-white border-emerald-900/10'}`}>
+              <div className="flex justify-between items-center">
+                <h2 className={`text-xl font-bold uppercase italic ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Custom Wordlist</h2>
+                <button onClick={() => setShowWordlistModal(false)} className={`p-2 rounded-xl transition-colors ${theme === 'dark' ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-emerald-900/5 text-emerald-900/60'}`}><X size={20} /></button>
               </div>
-
-              <textarea
-                value={wordlistText}
-                onChange={(e) => setWordlistText(e.target.value)}
-                placeholder="Enter words here (e.g., apple banana cherry dragon...)"
-                className={`w-full h-48 border rounded-2xl px-6 py-4 text-lg font-mono focus:outline-none focus:ring-2 transition-all resize-none ${
-                  theme === 'dark'
-                    ? 'bg-black/40 border-white/10 focus:ring-amber-500/50 text-white'
-                    : 'bg-emerald-50/50 border-emerald-900/10 focus:ring-emerald-800/30 text-emerald-950'
-                }`}
-              />
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    setWordlistText('');
-                    setCustomWordlist([]);
-                    setShowWordlistModal(false);
-                  }}
-                  className={`flex-1 py-4 rounded-2xl font-bold transition-all ${
-                    theme === 'dark'
-                      ? 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                      : 'bg-emerald-900/5 text-emerald-900/60 hover:bg-emerald-900/10 hover:text-emerald-900'
-                  }`}
-                >
-                  Reset
-                </button>
-                <button
-                  onClick={handleWordlistSave}
-                  className={`flex-1 py-4 rounded-2xl font-bold transition-all ${
-                    theme === 'dark'
-                      ? 'bg-amber-500 text-black hover:bg-amber-400'
-                      : 'bg-emerald-800 text-white hover:bg-emerald-700'
-                  }`}
-                >
-                  Save Wordlist
-                </button>
-              </div>
+              <textarea value={wordlistText} onChange={(e) => setWordlistText(e.target.value)} placeholder="campus&#10;security&#10;library" className={`w-full h-48 rounded-2xl border p-4 text-sm font-mono focus:outline-none focus:ring-2 ${theme === 'dark' ? 'bg-black/50 border-white/10 focus:ring-amber-500/50 text-white' : 'bg-emerald-50/50 border-emerald-900/10 focus:ring-emerald-800/30 text-emerald-950'}`} />
+              <button onClick={handleWordlistSave} className={`w-full font-bold py-4 rounded-xl transition-all ${theme === 'dark' ? 'bg-amber-500 hover:bg-amber-400 text-black' : 'bg-emerald-800 hover:bg-emerald-700 text-white'}`}>Save Wordlist</button>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* Guide Modal */}
+      {/* QR Modal */}
       <AnimatePresence>
-        {showGuideModal && selectedGuideSection !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowGuideModal(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-2xl border rounded-3xl p-8 shadow-2xl space-y-6 max-h-[80vh] overflow-y-auto ${
-                theme === 'dark' ? 'bg-[#161616] border-white/10' : 'bg-white border-emerald-900/10'
-              }`}
-            >
-              <button
-                onClick={() => setShowGuideModal(false)}
-                className={`absolute top-4 right-4 p-2 rounded-xl transition-colors ${
-                  theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
-                }`}
-              >
-                <X size={20} />
-              </button>
+        {showQr && password && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowQr(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className={`relative max-w-sm border rounded-[2rem] p-8 shadow-2xl space-y-6 text-center ${theme === 'dark' ? 'bg-[#161616] border-white/10' : 'bg-white border-emerald-900/10'}`}>
+              <button onClick={() => setShowQr(false)} className={`absolute top-4 right-4 p-2 rounded-xl transition-colors ${theme === 'dark' ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-emerald-900/5 text-emerald-900/60'}`}><X size={20} /></button>
+              <h3 className={`text-xl font-bold uppercase italic ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Scan to Copy</h3>
+              <div className="bg-white p-4 rounded-3xl inline-block"><QRCodeSVG value={password} size={200} level="H" includeMargin={false} /></div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-red-500">Warning: Never share in public spaces.</p>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-800/10 text-emerald-800'}`}>
-                  {[<Shield size={24} />, <Lock size={24} />, <Info size={24} />][selectedGuideSection]}
+      {/* Generator Side Panel */}
+      <AnimatePresence>
+        {isGeneratorPanelOpen && (
+          <div className="fixed inset-0 z-[100] flex justify-end">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsGeneratorPanelOpen(false)} 
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ x: '100%' }} 
+              animate={{ x: 0 }} 
+              exit={{ x: '100%' }} 
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`relative w-full max-w-[400px] h-full flex flex-col shadow-2xl overflow-y-auto border-l p-6 lg:p-8 space-y-6 ${theme === 'dark' ? 'bg-[#161616] border-white/10' : 'bg-white border-emerald-900/10'}`}
+            >
+              <div className="flex justify-between items-center">
+                <h2 className={`text-xl font-bold uppercase italic ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>Select Security</h2>
+                <button onClick={() => setIsGeneratorPanelOpen(false)} className={`p-2 rounded-xl transition-colors ${theme === 'dark' ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-emerald-900/5 text-emerald-900/60'}`}><X size={20} /></button>
+              </div>
+
+              {/* Mode Selector */}
+              <div className={`flex items-center p-1 rounded-xl border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-emerald-900/5 border-emerald-900/10'}`}>
+                {(['Maximum', 'Balanced', 'Easy'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setGenerationMode(mode)}
+                    className={`flex-1 flex flex-col items-center justify-center py-3 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+                      generationMode === mode
+                        ? (theme === 'dark' ? 'bg-amber-500 text-black shadow-md' : 'bg-emerald-800 text-white shadow-[0_0_10px_rgba(6,78,59,0.3)]')
+                        : (theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-emerald-900/60 hover:text-emerald-900 hover:bg-emerald-900/5')
+                    }`}
+                  >
+                    <span className="text-xl mb-1">{mode === 'Maximum' ? '🔒' : mode === 'Balanced' ? '🧠' : '🙂'}</span>
+                    <span>{mode}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Regenerate Button */}
+              <button onClick={generatePassword} className={`w-full font-bold py-4 rounded-xl transition-all ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10 text-white border border-white/10' : 'bg-emerald-900/5 hover:bg-emerald-900/10 text-emerald-950 border border-emerald-900/10'}`}>
+                <div className="flex items-center justify-center gap-2">
+                  <RefreshCw size={16} /> Regenerate Options
                 </div>
-                <h3 className={`text-2xl font-bold uppercase tracking-tight italic ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>
-                  {["PII Protection", "Two-Factor Authentication", "Phishing Awareness"][selectedGuideSection]}
-                </h3>
-              </div>
-
-              <div className={`text-sm leading-relaxed space-y-4 ${theme === 'dark' ? 'text-gray-300' : 'text-emerald-900/70'}`}>
-                {[
-                  (
-                    <div className="space-y-4">
-                      <p>Personally Identifiable Information (PII) includes any data that can be used to distinguish or trace an individual's identity. In a university context, this often includes your <strong>University Student Number (USN)</strong>, birth date, and campus email.</p>
-                      <h4 className="font-bold text-base">Why it matters:</h4>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li>Attackers often use publicly available PII to guess passwords or answer security questions.</li>
-                        <li>Using your USN as part of your password makes it significantly easier for brute-force tools to crack your account.</li>
-                        <li>Randomly generated passphrases provide much higher entropy than PII-based passwords.</li>
-                      </ul>
-                      <div className={`p-4 rounded-xl italic border ${theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-emerald-900/5 border-emerald-900/10'}`}>
-                        "A password like 'JohnDoe1995' can be cracked in seconds. A passphrase like 'campus-Secure-shield-access-159' would take centuries."
-                      </div>
-                    </div>
-                  ),
-                  (
-                    <div className="space-y-4">
-                      <p>2FA is a security process in which users provide two different authentication factors to verify themselves. This adds a critical layer of protection beyond just a password.</p>
-                      <h4 className="font-bold text-base">How it works at our University:</h4>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>Something you know:</strong> Your campus password.</li>
-                        <li><strong>Something you have:</strong> A push notification on your mobile device (via Duo Mobile) or a physical security key.</li>
-                      </ul>
-                      <p>Even if an attacker successfully steals your password through phishing, they cannot access your account without the second factor. <strong>Never approve a 2FA request that you didn't initiate.</strong></p>
-                    </div>
-                  ),
-                  (
-                    <div className="space-y-4">
-                      <p>Phishing is a type of social engineering where an attacker sends a fraudulent message designed to trick a person into revealing sensitive information.</p>
-                      <h4 className="font-bold text-base">Red Flags to Watch For:</h4>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li><strong>Urgent Language:</strong> "Your account will be deleted in 24 hours if you don't verify now."</li>
-                        <li><strong>Suspicious Senders:</strong> Emails from 'IT Support' using a non-university domain (e.g., @gmail.com).</li>
-                        <li><strong>Mismatched URLs:</strong> Hover over links to see the actual destination before clicking.</li>
-                      </ul>
-                      <p>University IT Services will <strong>never</strong> ask for your password via email, phone, or text message. If you are unsure, contact the IT Help Desk directly through official channels.</p>
-                    </div>
-                  )
-                ][selectedGuideSection]}
-              </div>
-
-              <div className="pt-6 border-t border-white/10">
-                <button
-                  onClick={() => setShowGuideModal(false)}
-                  className={`w-full py-4 rounded-2xl font-bold transition-all ${
-                    theme === 'dark'
-                      ? 'bg-amber-500 text-black hover:bg-amber-400'
-                      : 'bg-emerald-800 text-white hover:bg-emerald-700'
-                  }`}
-                >
-                  Got it, thanks!
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* QR Code Modal */}
-      <AnimatePresence>
-        {showQr && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowQr(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-sm border rounded-3xl p-8 shadow-2xl text-center space-y-6 ${
-                theme === 'dark' ? 'bg-[#161616] border-white/10' : 'bg-white border-emerald-900/10'
-              }`}
-            >
-              <button
-                onClick={() => setShowQr(false)}
-                className={`absolute top-4 right-4 p-2 rounded-xl transition-colors ${
-                  theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-900/5'
-                }`}
-              >
-                <X size={20} />
               </button>
-              
-              <div className="space-y-2">
-                <h3 className={`text-xl font-bold uppercase tracking-tight italic ${theme === 'dark' ? 'text-white' : 'text-emerald-950'}`}>
-                  Scan to <span className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-800'}>Copy</span>
-                </h3>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-emerald-900/60'}`}>
-                  Scan this QR code with your mobile device to securely transfer the password.
-                </p>
+
+              {/* Options */}
+              <div className="flex flex-col gap-3 flex-1">
+                {generatedOptions.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setPassword(opt); setIsGeneratorPanelOpen(false); }}
+                    className={`p-4 rounded-xl border text-sm font-mono transition-all text-left truncate flex flex-col gap-2 ${
+                      theme === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-emerald-50 border-emerald-900/10 hover:bg-emerald-100 text-emerald-900'
+                    }`}
+                  >
+                    <div className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-700'}>Option {idx + 1}</div>
+                    <div className="text-lg tracking-wider opacity-90">{opt}</div>
+                  </button>
+                ))}
               </div>
 
-              <div className={`p-6 rounded-2xl inline-block shadow-2xl ${
-                theme === 'dark' ? 'bg-white shadow-white/5' : 'bg-white shadow-emerald-900/10'
+              {/* Explainer */}
+              <div className={`p-4 rounded-xl border text-[10px] uppercase font-bold tracking-wider space-y-2 mb-safe ${
+                theme === 'dark' ? 'bg-white/5 border-white/5 text-gray-400' : 'bg-emerald-900/5 border-emerald-900/10 text-emerald-900/60'
               }`}>
-                <QRCodeSVG 
-                  value={password} 
-                  size={200}
-                  level="H"
-                  includeMargin={false}
-                  fgColor={theme === 'dark' ? '#000000' : '#064e3b'}
-                />
-              </div>
-
-              <div className="pt-2">
-                <p className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-gray-600' : 'text-emerald-900/30'}`}>
-                  Security Warning: Never share this QR code in public spaces.
-                </p>
+                 <div className="mb-3 opacity-70">Why this is strong:</div>
+                 <div className="flex items-center gap-2"><Check size={12} className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-700'} /> High entropy rating</div>
+                 <div className="flex items-center gap-2"><Check size={12} className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-700'} /> Diverse character set included</div>
+                 <div className="flex items-center gap-2"><Check size={12} className={theme === 'dark' ? 'text-amber-500' : 'text-emerald-700'} /> No predictable algorithms</div>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-      {/* Footer */}
-      <footer className={`py-12 text-center text-sm ${theme === 'dark' ? 'text-gray-600' : 'text-emerald-900/30'}`}>
-        <p>Copyright 2026 Campus Security Lab - University IT Services</p>
-      </footer>
     </div>
   );
 }
