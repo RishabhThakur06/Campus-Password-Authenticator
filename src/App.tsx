@@ -692,18 +692,21 @@ export default function App() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter or generate campus password..."
-                      className={`w-full border rounded-xl pl-5 pr-24 py-3 text-lg font-mono focus:outline-none focus:ring-2 transition-all duration-300 placeholder:text-gray-500/70 shadow-inner ${
+                      className={`w-full border rounded-xl pl-5 pr-28 py-3 text-lg font-mono focus:outline-none focus:ring-2 transition-all duration-300 placeholder:text-gray-500/70 shadow-inner ${
                         theme === 'dark'
                           ? 'bg-black/40 border-white/10 hover:border-white/20 focus:ring-amber-500/30 focus:border-amber-500/50 text-white'
                           : 'bg-emerald-50/50 border-emerald-900/10 hover:border-emerald-900/20 focus:ring-emerald-800/20 focus:border-emerald-800/40 text-emerald-950'
                       }`}
                     />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 h-full py-2">
-                      <button onClick={() => setShowPassword(!showPassword)} className={`flex items-center justify-center h-full aspect-square rounded-lg transition-colors duration-300 ${theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-emerald-900/50 hover:text-emerald-900 hover:bg-emerald-900/10'}`} title={showPassword ? "Hide password" : "Show password"}>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                      <button onClick={() => setShowPassword(!showPassword)} className={`p-1.5 rounded-md transition-all duration-300 ${theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-emerald-900/50 hover:text-emerald-900 hover:bg-emerald-900/10'}`} title={showPassword ? "Hide password" : "Show password"}>
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
-                      <button onClick={copyToClipboard} className={`flex items-center justify-center h-full aspect-square rounded-lg transition-all duration-300 ${copied ? (theme === 'dark' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-800/10 text-emerald-800') : (theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-emerald-900/50 hover:text-emerald-900 hover:bg-emerald-900/10')}`} title="Copy to clipboard">
+                      <button onClick={copyToClipboard} className={`p-1.5 rounded-md transition-all duration-300 ${copied ? (theme === 'dark' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-800/10 text-emerald-800') : (theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-emerald-900/50 hover:text-emerald-900 hover:bg-emerald-900/10')}`} title="Copy password">
                         {copied ? <Check size={18} /> : <Copy size={18} />}
+                      </button>
+                      <button onClick={() => setShowQr(true)} disabled={!password} className={`p-1.5 rounded-md transition-all duration-300 ${theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30' : 'text-emerald-900/50 hover:text-emerald-900 hover:bg-emerald-900/10 disabled:opacity-40'}`} title="Generate QR">
+                        <QrCode size={18} />
                       </button>
                     </div>
                   </div>
